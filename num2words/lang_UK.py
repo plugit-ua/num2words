@@ -34,6 +34,18 @@ ONES_FEMININE = {
     9: ("дев'ять", "дев'яти",  "дев'яти",  "дев'ять", "дев'ятьма", "дев'яти"),
 }
 
+ONES_NEUTER = {
+    1: ('одне',    "одного",   "одному",    "одне",    "одним",    "одному"),
+    2: ('два',     'двох',     "двом",     "два",     "двома",     "двох"),
+    3: ('три',     "трьох",    "трьом",    "три",     "трьома",    "трьох"),
+    4: ('чотири',  "чотирьох", "чотирьом", "чотири",  "чотирма",   "чотирьох"),
+    5: ('п\'ять',  "п'яти",    "п'яти",    "п'ять",   "п'ятьма",   "п'яти"),
+    6: ('шість',   "шести",    "шести",    "шість",   "шістьма",   "шести"),
+    7: ('сім',     "семи",     "семи",     "сім",     "сьома",     "семи"),
+    8: ('вісім',   "восьми",   "восьми",   "вісім",   "вісьма",    "восьми"),
+    9: ("дев'ять", "дев'яти",  "дев'яти",  "дев'ять", "дев'ятьма", "дев'яти"),
+}
+
 ONES = {
     1: ('один',    'одного',   "одному",   "один",    "одним",     "одному"),
     2: ('два',     'двох',     "двом",     "два",     "двома",     "двох"),
@@ -44,6 +56,12 @@ ONES = {
     7: ('сім',     'семи',     "семи",     "сім",     "сьома",     "семи"),
     8: ('вісім',   'восьми',   "восьми",   "вісім",   "вісьма",    "восьми"),
     9: ("дев'ять", "дев'яти",  "дев'яти",  "дев'ять", "дев'ятьма", "дев'яти"),
+}
+
+GENDER_ONES = {
+    "": ONES,
+    "femine": ONES_FEMININE,
+    "neuter": ONES_NEUTER,
 }
 
 ONES_ORDINALS = {
@@ -917,11 +935,7 @@ class Num2Word_UK(Num2Word_Base):
                 "locative"].index(case)
         else:
             morphological_case = 0
-
-        if 'gender' in kwargs:
-            gender = kwargs['gender'] == 'feminine'
-        else:
-            gender = False
+        gender = kwargs.get('gender', '')
 
         n = str(number).replace(',', '.')
         if '.' in n:
@@ -951,9 +965,9 @@ class Num2Word_UK(Num2Word_Base):
 
         return forms[form]
 
-    def _int2word(self, n, feminine=False, morphological_case=0):
+    def _int2word(self, n, gender="", morphological_case=0):
         if n < 0:
-            n_value = self._int2word(abs(n), feminine, morphological_case)
+            n_value = self._int2word(abs(n), gender, morphological_case)
             return ' '.join([self.negword,
                              n_value])
 
@@ -981,7 +995,9 @@ class Num2Word_UK(Num2Word_Base):
                 words.append(TENS[n1][morphological_case])
             # elif n1 > 0 and not (i > 0 and x == 1):
             elif n1 > 0:
-                ones = ONES_FEMININE if i == 1 or feminine and i == 0 else ONES
+                ones = GENDER_ONES[gender]
+                if i == 1:
+                    ones = ONES_FEMININE
                 words.append(ones[n1][morphological_case])
 
             if i > 0:
@@ -991,10 +1007,10 @@ class Num2Word_UK(Num2Word_Base):
         return ' '.join(words)
 
     def _money_verbose(self, number, currency):
-        return self._int2word(number, currency in FEMININE_MONEY)
+        return self._int2word(number, currency in FEMININE_MONEY and "femine" or "")
 
     def _cents_verbose(self, number, currency):
-        return self._int2word(number, currency in FEMININE_CENTS)
+        return self._int2word(number, currency in FEMININE_CENTS and "femine" or "")
 
     @staticmethod
     def last_fragment_to_ordinal(last, words, level):
